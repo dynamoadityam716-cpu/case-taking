@@ -1,0 +1,8 @@
+# Freebuff client workspace metadata (not part of the app)
+.freebuff/
+
+# OS / editor junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.log

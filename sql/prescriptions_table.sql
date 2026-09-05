@@ -1,0 +1,12 @@
+-- ============================================================================
+-- DEPRECATED — this file was the demo-only schema (public read/insert RLS).
+--
+-- The production schema now lives in `schema.sql` in this same folder:
+--   clinics, staff, patients, visits, documents, consents, outbound_queue,
+--   audit_log, plus the upgraded `cases` / `prescriptions` tables (doctor
+--   review, triage and ABHA columns) with authenticated, staff-scoped RLS.
+--
+-- Apply `sql/schema.sql` instead. It is safe to re-run and will upgrade an
+-- existing project that already ran this file (it keeps existing rows,
+-- drops the old public policies and adds the new columns/tables).
+-- ============================================================================

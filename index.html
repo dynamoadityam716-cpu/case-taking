@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patient Case-Taking Software — SIH26047 · Ministry of Ayush</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="auth-locked">
+
+<div id="authScreen" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+  <div class="auth-shell">
+    <div class="auth-brand-panel">
+      <div class="auth-brand">
+        <svg class="leaf" viewBox="0 0 24 24" fill="none"><path d="M4 20C4 10 10 4 20 4C20 14 14 20 4 20Z" stroke="#D9A441" stroke-width="1.6"/><path d="M4 20C8 16 12 12 19 5" stroke="#D9A441" stroke-width="1.2"/></svg>
+        Case-Taking · SIH26047
+      </div>
+      <div>
+        <div class="auth-kicker">Secure clinical workspace</div>
+        <h1>Your cases.<br><em>Structured.</em></h1>
+        <p>Sign in to access the Ayurveda digital case-taking workspace, doctor queue and prescription tools.</p>
+        <ul class="auth-points">
+          <li>Protected access to the clinical workspace</li>
+          <li>Continue your case-taking workflow</li>
+          <li>Supabase session-based authentication</li>
+        </ul>
+      </div>
+      <div class="mono" style="font-size:10.5px;color:rgba(243,238,223,.42);">SIH26047 · Ministry of Ayush</div>
+    </div>
+    <div class="auth-form-panel">
+      <form class="auth-form" id="loginForm">
+        <h2 id="loginTitle">Welcome</h2>
+        <p class="auth-sub" id="loginSubtitle">Log in to continue to your case-taking workspace.</p>
+        <div class="auth-field"><label for="loginEmail">Email address</label><input id="loginEmail" type="email" autocomplete="email" placeholder="you@example.com" required></div>
+        <div class="auth-field"><label for="loginPassword">Password</label><div class="auth-input-wrap"><input id="loginPassword" type="password" autocomplete="current-password" placeholder="At least 6 characters" required minlength="6"><button class="auth-password-toggle" id="togglePassword" type="button">SHOW</button></div></div>
+        <button class="btn btn-primary auth-submit" id="loginSubmit" type="submit">Log in</button>
+        <div class="auth-error" id="loginError" role="alert"></div><div class="auth-status" id="loginStatus"></div>
+        <div class="auth-switch"><span id="switchText">New here?</span> <button type="button" id="authModeToggle">Create account</button></div>
+        <p class="auth-note" id="authNote">Create your account once. Next time, just enter the same email and password to log in.</p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Language selection — appears right after login / on workspace entry -->
+<div id="langPickOverlay" role="dialog" aria-modal="true" aria-labelledby="langPickTitle">
+  <div class="lang-pick-card">
+    <button class="lang-pick-close" id="langPickClose" type="button" aria-label="Close">✕</button>
+    <p class="lang-pick-kicker">Choose your language · अपनी भाषा चुनें · तुमची भाषा निवडा</p>
+    <h2 class="lang-pick-title" id="langPickTitle">How would you like to use the app?</h2>
+    <p class="lang-pick-sub">Pick the language for the whole case-taking workspace. You can switch it anytime from the top bar.</p>
+    <div class="lang-pick-options">
+      <button class="lang-pick-btn lp-en" type="button" data-lang="en">
+        <span class="lp-flag">EN</span>
+        <span class="lp-txt"><strong>English</strong><small>English — for the whole workspace</small></span>
+      </button>
+      <button class="lang-pick-btn lp-hi" type="button" data-lang="hi">
+        <span class="lp-flag">हिं</span>
+        <span class="lp-txt"><strong>हिन्दी</strong><small>Hindi · पूरे वर्कस्पेस के लिए</small></span>
+      </button>
+      <button class="lang-pick-btn lp-mr" type="button" data-lang="mr">
+        <span class="lp-flag">मरा</span>
+        <span class="lp-txt"><strong>मराठी</strong><small>Marathi · संपूर्ण वर्कस्पेससाठी</small></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<nav>
+  <div class="wrap">
+    <div class="brand">
+      <svg class="leaf" viewBox="0 0 24 24" fill="none"><path d="M4 20C4 10 10 4 20 4C20 14 14 20 4 20Z" stroke="#D9A441" stroke-width="1.6"/><path d="M4 20C8 16 12 12 19 5" stroke="#D9A441" stroke-width="1.2"/></svg>
+      Case-Taking · SIH26047
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+    <div class="nav-right">
+      <div class="nav-actions">
+        <button class="nav-icon-btn lang-btn" id="langToggle" type="button" aria-label="Switch language" title="Switch form language">EN</button>
+        <button class="nav-icon-btn" id="themeToggle" type="button" aria-label="Toggle night OPD mode" title="Night OPD mode">
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
+        <button class="nav-icon-btn logout-btn" id="logoutBtn" type="button" aria-label="Sign out" title="Sign out">↪</button>
+      </div>
+      <ul class="navlinks" id="navLinks">
+        <li><a href="#problem">Problem</a></li>
+        <li><a href="#solution">Solution</a></li>
+        <li><a href="#demo">Try it</a></li>
+        <li><a href="#impact">Impact</a></li>
+        <li><a href="#challenges">Challenges</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">SIH26047 · Ministry of Ayush · Smart Automation</span>
+      <h1>The case history <em>is</em> the diagnosis.<br>We're done writing it on paper.</h1>
+      <p class="lede">A structured, standards-linked digital case-taking system for Ayurveda practitioners — built on the exact clinical method doctors already use, minus the illegible handwriting and dead-end paper trail.</p>
+      <div class="cta-row">
+        <a href="#demo" class="btn btn-primary">Try the demo</a>
+        <a href="#problem" class="btn btn-ghost">See the problem</a>
+      </div>
+    </div>
+    <div class="morph-card">
+      <div class="morph-head">
+        <span>Case Sheet Preview</span>
+        <div class="toggle">
+          <button id="viewPaper" class="active">Paper</button>
+          <button id="viewDigital">Digital</button>
+        </div>
+      </div>
+      <div class="morph-body">
+        <div class="morph-view active" id="paperView">
+          <div class="paper-lines">
+            <div class="paper-line short"></div>
+            <div class="paper-line med"></div>
+            <div class="paper-line"></div>
+          </div>
+          <div class="paper-scrawl">"Vata type, c/o joint pain 3 wks, worse in cold — advised Ashwagandha, follow-up 10 days..."</div>
+          <div class="paper-lines" style="margin-top:16px;">
+            <div class="paper-line med"></div>
+            <div class="paper-line short"></div>
+          </div>
+        </div>
+        <div class="morph-view" id="digitalView">
+          <div class="digital-grid">
+            <div class="field"><label>Prakriti</label><div class="val">Vata</div></div>
+            <div class="field"><label>Duration</label><div class="val">3 weeks</div></div>
+            <div class="field wide"><label>Chief Complaint</label><div class="val">Joint pain, cold-aggravated</div></div>
+            <div class="field code wide"><label>NAMASTE / ICD-11 Code</label><div class="val">AYU-SA-14.2 · TM26.A</div></div>
+            <div class="field wide"><label>ABHA Link</label><div class="val" style="color:var(--neem);">✓ Synced to national record</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="problem" id="problem">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">The problem</span>
+      <h2>Ayurveda has good software. Just not this piece of it.</h2>
+      <p>Private clinic EMRs already digitize prescriptions and billing. None of them turn case-taking into standardized, government-usable data.</p>
+    </div>
+    <div class="compare-grid">
+      <div class="compare-card reveal">
+        <span class="kind">Government platforms</span>
+        <h3>A-HMIS · NAMASTE · Ayush Grid</h3>
+        <ul>
+          <li>ABHA-linked hospital records</li>
+          <li>Standard diagnosis codes exist</li>
+          <li>No structured case-taking workflow — codes have to be applied after the fact</li>
+        </ul>
+      </div>
+      <div class="compare-card reveal">
+        <span class="kind">Private clinic EMRs</span>
+        <h3>Clinicea · Healthray · AyurGrid</h3>
+        <ul>
+          <li>Case-taking captured as free-text notes</li>
+          <li>Great for solo/private practice billing</li>
+          <li>Paid SaaS — not standardized for govt hospitals</li>
+        </ul>
+      </div>
+      <div class="compare-card reveal">
+        <span class="kind">Teaching hospitals today</span>
+        <h3>What's actually used</h3>
+        <ul>
+          <li>Paper case-sheets, still</li>
+          <li>No two hospitals record the same way</li>
+          <li>Data unsearchable, unusable for research</li>
+        </ul>
+      </div>
+    </div>
+    <div class="gap-strip reveal">
+      <div class="dot"></div>
+      <p><strong>The gap:</strong> nobody has built the free, standards-compliant, ABHA/NAMASTE-linked case-taking layer that government Ayush hospitals can actually adopt at scale. That's what this is.</p>
+    </div>
+  </div>
+</section>
+
+<section class="solution" id="solution">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">The solution</span>
+      <h2>Seven features. One goal: paper's clinical rigor, digital's traceability.</h2>
+      <p>Nothing here replaces how a Vaidya thinks — it structures what they already ask.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature reveal"><div class="num">1</div><h3>Structured Case Sheet</h3><p>Prakriti, Nidan Panchaka and Ashtavidha Pariksha as guided fields, not blank paragraphs.</p></div>
+      <div class="feature reveal"><div class="num">2</div><h3>Photo-to-Scan Intake</h3><p>Snap or upload a photo of an existing paper case sheet or prescription — OCR lifts the patient's details straight into the digital form.</p></div>
+      <div class="feature reveal"><div class="num">3</div><h3>NAMASTE / ICD-11 Auto-Coding</h3><p>Diagnosis selections map to national codes automatically, in the background.</p></div>
+      <div class="feature reveal"><div class="num">4</div><h3>ABHA ID Linking</h3><p>The case record follows the patient across visits and institutions.</p></div>
+      <div class="feature reveal"><div class="num">5</div><h3>Voice-to-Text Entry</h3><p>Speak the case instead of typing — OPD speed stays intact.</p></div>
+      <div class="feature reveal"><div class="num">6</div><h3>Ministry-Level Dashboard</h3><p>Aggregate dosha and disease-pattern data, usable for real research.</p></div>
+      <div class="feature reveal"><div class="num">7</div><h3>Multilingual Forms</h3><p>Regional-language practitioners aren't left out of digitization.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="demo" id="demo">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Try it</span>
+      <h2>Fill the case. Watch it become data.</h2>
+      <p>This is a live, simplified version of the actual case-taking flow. Pick a Prakriti and a few symptoms — the right panel builds the structured record and the code as you go.</p>
+    </div>
+    <div class="notebook reveal">
+      <div class="notebook-tabs">
+        <button class="notebook-tab active" data-page="1" type="button"><span class="tab-num">01</span> Fill the case</button>
+        <button class="notebook-tab" data-page="2" type="button"><span class="tab-num">02</span> Record &amp; prescription</button>
+      </div>
+      <div class="notebook-spread">
+        <div class="notebook-page page-1 active" data-page="1">
+      <div class="demo-side form">
+        <div class="scan-block">
+          <label>Optional — scan a paper case sheet</label>
+          <div class="scan-dropzone" id="scanDropzone" role="button" tabindex="0" aria-label="Upload or take a photo of a paper case sheet">
+            <div class="scan-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            </div>
+            <div class="scan-copy">
+              <strong>Take or upload a photo</strong>
+              <span>We'll pull the patient's details straight off the paper</span>
+            </div>
+          </div>
+          <input type="file" id="scanFileInput" accept="image/*" capture="environment" style="display:none;">
+          <p class="scan-note">Runs real OCR on your device (Tesseract.js). The first scan downloads the engine (~7 MB), so an internet connection is needed.</p>
+          <div class="scan-preview" id="scanPreview">
+            <div class="scan-preview-frame" id="scanPreviewFrame">
+              <img id="scanPreviewImg" alt="Uploaded case sheet photo">
+              <div class="scan-line"></div>
+            </div>
+            <div class="scan-status" id="scanStatus"><div class="dot"></div><span id="scanStatusText">Scanning photo…</span><button class="scan-clear" id="scanClearBtn" type="button">Clear</button></div>
+            <p class="scan-fields-note" id="scanFieldsNote">Filled in: name, age, gender, weight, blood group, body type and symptoms from the case sheet — check and adjust anything below.</p>
+          </div>
+        </div>
+        <div class="step-progress" id="stepProgress">
+          <div class="step-progress-track"><div class="step-progress-fill" id="stepProgressFill"></div></div>
+          <div class="step-progress-labels">
+            <span class="step-dot-label" data-step="1">Patient</span>
+            <span class="step-dot-label" data-step="2">Body type</span>
+            <span class="step-dot-label" data-step="3">Symptoms</span>
+            <span class="step-dot-label" data-step="4">Triggers</span>
+            <span class="step-dot-label" data-step="5">Notes</span>
+          </div>
+        </div>
+        <span class="demo-label">Step 1 — Patient details</span>
+        <div class="patient-details">
+          <div class="input-field" style="grid-column: span 2;"><label>Full name</label><input type="text" id="inName" placeholder="e.g. Ramesh Iyer"></div>
+          <div class="input-field"><label>Age</label><input type="number" id="inAge" placeholder="e.g. 42" min="0" max="120"></div>
+          <div class="input-field"><label>Gender</label><select id="inGender" aria-label="Gender"><option value="">— select —</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>
+          <div class="input-field"><label>Weight (kg)</label><input type="number" id="inWeight" placeholder="e.g. 65" min="1" max="300" step="0.1"></div>
+          <div class="input-field"><label>Blood group</label><select id="inBlood" aria-label="Blood group"><option value="">— select —</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option></select></div>
+          <div class="input-field" style="grid-column: span 2;"><label>ABHA number (optional — links the record)</label><input type="text" id="inAbha" placeholder="e.g. 91-1234-5678-9012" autocomplete="off"></div>
+        </div>
+        <div class="consent-block" id="consentBlock">
+          <div class="consent-row"><span class="consent-copy"><strong>Consent</strong> — tick what may be done with this case. Consent is recorded, and you can withdraw it later.</span></div>
+          <div class="consent-row"><label class="consent-check"><input type="checkbox" id="consentDocsChk" checked><span>Scan and store any documents I upload</span></label></div>
+          <div class="consent-row"><label class="consent-check"><input type="checkbox" id="consentShareChk"><span>Share this visit with my ABHA health record (only when an ABHA number is given)</span></label></div>
+        </div>
+        <span class="demo-label">Step 2 — Body type (Prakriti)</span>
+        <div class="prakriti-select">
+          <button class="dosha-btn" data-dosha="vata"><strong>Vata</strong><span>Air · Space</span></button>
+          <button class="dosha-btn" data-dosha="pitta"><strong>Pitta</strong><span>Fire · Water</span></button>
+          <button class="dosha-btn" data-dosha="kapha"><strong>Kapha</strong><span>Earth · Water</span></button>
+        </div>
+        <span class="demo-label">Step 3 — What's bothering you</span>
+        <div class="symptom-block">
+          <label>Select what applies</label>
+          <div id="symptomChips">
+            <div class="check-category">
+              <div class="check-category-label">Pain &amp; stiffness</div>
+              <div class="check-grid">
+                <div class="check-item" data-symptom="Joint pain" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Joint pain</div>
+                <div class="check-item" data-symptom="Stiff joints" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Stiff joints</div>
+                <div class="check-item" data-symptom="Headache" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Headache</div>
+              </div>
+            </div>
+            <div class="check-category">
+              <div class="check-category-label">Stomach &amp; appetite</div>
+              <div class="check-grid">
+                <div class="check-item" data-symptom="Upset stomach" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Upset stomach</div>
+                <div class="check-item" data-symptom="Not feeling hungry" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Not feeling hungry</div>
+                <div class="check-item" data-symptom="Heartburn" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Heartburn</div>
+              </div>
+            </div>
+            <div class="check-category">
+              <div class="check-category-label">Mind &amp; sleep</div>
+              <div class="check-grid">
+                <div class="check-item" data-symptom="Trouble sleeping" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Trouble sleeping</div>
+                <div class="check-item" data-symptom="Feeling anxious" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Feeling anxious</div>
+              </div>
+            </div>
+            <div class="check-category">
+              <div class="check-category-label">Daily habits</div>
+              <div class="check-grid">
+                <div class="check-item" data-symptom="Feeling tired" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Feeling tired</div>
+              </div>
+            </div>
+            <div class="check-category">
+              <div class="check-category-label">Skin, cough &amp; fever</div>
+              <div class="check-grid">
+                <div class="check-item" data-symptom="Ongoing cough" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Ongoing cough</div>
+                <div class="check-item" data-symptom="Mild fever" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Mild fever</div>
+                <div class="check-item" data-symptom="Skin itching or rash" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Skin itching or rash</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="other-complaint">
+          <label for="inOtherComplaint">Something else? (not in the list)</label>
+          <input type="text" id="inOtherComplaint" placeholder="Describe it in your own words, e.g. knee pain since last week" autocomplete="off">
+        </div>
+        <div class="followup-block" id="followupBlock" style="display:none;">
+          <label>A bit more detail on what you picked</label>
+          <div id="followupList"></div>
+        </div>
+        <span class="demo-label">Step 4 — When do your symptoms get worse</span>
+        <div class="symptom-block">
+          <div id="factorChips">
+            <div class="check-category">
+              <div class="check-category-label">Weather</div>
+              <div class="check-grid">
+                <div class="check-item" data-factor="Cold weather" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Cold weather</div>
+                <div class="check-item" data-factor="Dry weather" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Dry weather</div>
+              </div>
+            </div>
+            <div class="check-category">
+              <div class="check-category-label">Eating habits</div>
+              <div class="check-grid">
+                <div class="check-item" data-factor="Eating too much" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Eating too much</div>
+                <div class="check-item" data-factor="Skipping meals" role="checkbox" tabindex="0" aria-checked="false"><span class="box"></span>Skipping meals</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <details class="full-history" id="fullHistoryBlock">
+          <summary>Optional — fuller history (past illness, medicines, family…)</summary>
+          <div class="full-history-grid">
+            <div class="input-field"><label>Past / ongoing illnesses &amp; surgeries</label><input type="text" id="extraPast" placeholder="e.g. diabetes since 2018; hernia repair 2021" autocomplete="off"></div>
+            <div class="input-field"><label>Current medicines (one per line)</label><textarea id="extraMedsTa" rows="2" placeholder="e.g. Tab. Metformin 500 mg BD
+Ashwagandha 500 mg at night"></textarea></div>
+            <div class="input-field"><label>Allergies</label><input type="text" id="extraAllergies" placeholder="e.g. penicillin — rash" autocomplete="off"></div>
+            <div class="input-field"><label>Family history</label><input type="text" id="extraFamily" placeholder="e.g. mother has high blood pressure" autocomplete="off"></div>
+            <div class="input-field" style="grid-column: span 2;"><label>Lifestyle / occupation / habits</label><input type="text" id="extraLifestyle" placeholder="e.g. night-shift worker, smoker, sleeps 5 h" autocomplete="off"></div>
+            <div class="input-field" style="grid-column: span 2;"><label>Ayurveda detail — Agni, Koshtha, Ahara-Vihara, Nidana (optional)</label><textarea id="extraAyush" rows="2" placeholder="e.g. Agni manda, Koshtha krura, takes cold water regularly"></textarea></div>
+          </div>
+        </details>
+        <span class="demo-label">Step 5 — Anything else to add (optional)</span>
+        <div class="notes-field">
+          <label>Description / notes</label>
+          <div class="notes-wrap">
+            <textarea id="inNotes" placeholder="Describe how you're feeling in your own words, or tap the mic and speak..."></textarea>
+            <button class="mic-btn" id="micBtn" type="button" title="Speak to fill in" aria-label="Speech to text">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+            </button>
+          </div>
+          <p class="mic-unsupported" id="micUnsupported">Speech-to-text isn't supported in this browser — try Chrome or Edge.</p>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="submitCase" type="button">Submit case to doctor</button>
+        </div>
+        <p class="submit-hint" id="submitHint"></p>
+      </div>
+        </div>
+        <div class="notebook-spine" aria-hidden="true"></div>
+        <div class="notebook-page page-2" data-page="2">
+      <div class="demo-side output">
+        <span class="demo-label">Structured record (live)</span>
+        <div class="submit-banner" id="submitBanner" style="display:none;"></div>
+        <div class="patient-card">
+          <div class="avatar" id="outAvatar">–</div>
+          <div>
+            <div class="pname" id="outName">Unnamed patient</div>
+            <div class="page" id="outAge">Age — not entered</div>
+          </div>
+        </div>
+        <div class="record-card"><span class="rlabel">Body type</span><div class="rval placeholder" id="outDosha">— select above —</div></div>
+        <div class="record-card"><span class="rlabel">Main complaint</span><div class="rval placeholder" id="outSymptoms">— none selected —</div></div>
+        <div class="record-card"><span class="rlabel">Worse when</span><div class="rval placeholder" id="outFactor">— none selected —</div></div>
+        <div class="record-card code"><span class="rlabel">NAMASTE / ICD-11 code (auto-generated)</span><div class="code-row"><div class="rval placeholder" id="outCode">— pending —</div><button class="copy-code-btn" id="copyCodeBtn" type="button" title="Copy code">Copy</button></div></div>
+        <div class="abha-strip" id="abhaStrip"><div class="pulse"></div> Synced to ABHA record on save</div>
+        <div class="doctor-queue">
+          <span class="demo-label" style="margin-top:22px;">Doctor's queue — cases received</span>
+          <div class="queue-list" id="queueList">
+            <p class="queue-empty" id="queueEmpty">No cases awaiting prescription.</p>
+          </div>
+        </div>
+      </div>
+
+    <div class="patient-record-panel">
+      <span class="demo-label">Patient portal — look up your prescription</span>
+      <p class="portal-sub">Simulates the patient checking their own ABHA-linked record after the visit — enter the same name and age used at check-in to pull up the prescription (nothing is shown until you search).</p>
+      <div class="portal-search">
+        <div class="input-field"><label>Full name</label><input type="text" id="portalName" placeholder="e.g. Ramesh Iyer"></div>
+        <div class="input-field"><label>Age</label><input type="number" id="portalAge" placeholder="e.g. 42" min="0" max="120"></div>
+        <button class="btn btn-primary" id="portalSearchBtn" type="button">Find my prescription</button>
+      </div>
+      <div class="rx-list" id="rxList">
+        <p class="queue-empty" id="rxEmpty">Enter your name and age above to view your prescription, once your doctor has written one.</p>
+      </div>
+    </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="rx-overlay" id="rxOverlay">
+  <div class="rx-modal">
+    <div class="rx-modal-head">
+      <div>
+        <h3 id="rxModalName">Prescription</h3>
+        <p id="rxModalMeta">—</p>
+      </div>
+      <button class="rx-close" id="rxCloseBtn" type="button" aria-label="Close">✕</button>
+    </div>
+
+    <span class="rx-section-label">Medicines</span>
+    <div id="rxMedRows"></div>
+    <button class="rx-add-med" id="rxAddMedBtn" type="button">+ Add another medicine</button>
+
+    <div class="rx-field">
+      <span class="rx-section-label">Instructions for patient</span>
+      <textarea id="rxInstructions" placeholder="e.g. Take after food. Avoid cold and heavy foods. Rest advised."></textarea>
+    </div>
+
+    <div class="rx-field">
+      <span class="rx-section-label">Follow-up in (days)</span>
+      <input type="number" id="rxFollowUp" min="0" max="90" placeholder="e.g. 10">
+    </div>
+
+    <p class="rx-hint" id="rxHint"></p>
+    <div class="rx-modal-actions">
+      <button class="btn btn-ghost" id="printRxBtn" type="button" style="color:var(--text-dark); border-color:var(--line);">Print / save prescription</button>
+      <button class="btn btn-primary" id="rxSaveBtn" type="button">Save prescription</button>
+      <button class="btn btn-ghost" id="rxCancelBtn" type="button" style="color:var(--text-dark); border-color:var(--line);">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<section class="impact" id="impact">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Impact</span>
+      <h2>What changes when case-taking becomes data</h2>
+      <p>Every feature exists to make one thing true: the record outlives the visit.</p>
+    </div>
+    <div class="impact-grid">
+      <div class="impact-list">
+        <div class="impact-row reveal"><div class="idot"></div><div><h4>Structured Digital Case Sheet</h4><p>Doctor notes become searchable, comparable data — not isolated paper records.</p></div></div>
+        <div class="impact-row reveal"><div class="idot"></div><div><h4>NAMASTE / ICD-11 Auto-Coding</h4><p>Every diagnosis is nationally standardized without extra doctor effort.</p></div></div>
+        <div class="impact-row reveal"><div class="idot"></div><div><h4>ABHA ID Linking</h4><p>Patient history follows the patient across Ayush hospitals and visits.</p></div></div>
+        <div class="impact-row reveal"><div class="idot"></div><div><h4>Ministry-Level Dashboard</h4><p>Real aggregate data — dosha trends, disease patterns — for research and policy.</p></div></div>
+      </div>
+      <div class="stat-block reveal">
+        <div class="stat">100%</div>
+        <p>of case records become structured, coded, and ABHA-linked — replacing paper that was untraceable and unsearchable.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="challenges" id="challenges">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Being honest</span>
+      <h2>Challenges we expect — and how we handle them</h2>
+      <p>Click any row to see the mitigation.</p>
+    </div>
+    <div class="challenge-list" id="challengeList">
+      <div class="challenge-item reveal">
+        <div class="challenge-head"><h3>Doctor adoption resistance</h3><span class="arrow">▾</span></div>
+        <div class="challenge-body"><div class="challenge-body-inner">
+          <div class="col"><span>Why it's real</span><p>Senior doctors are used to free-form paper notes; rigid fields may feel restrictive.</p></div>
+          <div class="col"><span>Our mitigation</span><p>Hybrid fields — structured selections plus an optional free-text remarks box on every section.</p></div>
+        </div></div>
+      </div>
+      <div class="challenge-item reveal">
+        <div class="challenge-head"><h3>Poor rural connectivity</h3><span class="arrow">▾</span></div>
+        <div class="challenge-body"><div class="challenge-body-inner">
+          <div class="col"><span>Why it's real</span><p>Many Ayush centers have weak or unreliable internet access.</p></div>
+          <div class="col"><span>Our mitigation</span><p>Offline-first app that syncs to ABHA/NAMASTE automatically once connected.</p></div>
+        </div></div>
+      </div>
+      <div class="challenge-item reveal">
+        <div class="challenge-head"><h3>Loss of clinical nuance</h3><span class="arrow">▾</span></div>
+        <div class="challenge-body"><div class="challenge-body-inner">
+          <div class="col"><span>Why it's real</span><p>Fixed dropdowns can oversimplify subtle diagnostic judgment.</p></div>
+          <div class="col"><span>Our mitigation</span><p>A remarks field on every section preserves the doctor's own judgment alongside the structured data.</p></div>
+        </div></div>
+      </div>
+      <div class="challenge-item reveal">
+        <div class="challenge-head"><h3>Training & onboarding cost</h3><span class="arrow">▾</span></div>
+        <div class="challenge-body"><div class="challenge-body-inner">
+          <div class="col"><span>Why it's real</span><p>Staff need time to learn any new system, taking time from patient care.</p></div>
+          <div class="col"><span>Our mitigation</span><p>Phased rollout starting with teaching hospitals, plus a guided in-app tutorial for students and faculty.</p></div>
+        </div></div>
+      </div>
+      <div class="challenge-item reveal">
+        <div class="challenge-head"><h3>Data privacy (DPDP Act)</h3><span class="arrow">▾</span></div>
+        <div class="challenge-body"><div class="challenge-body-inner">
+          <div class="col"><span>Why it's real</span><p>ABHA-linked health data demands strict compliance and careful handling.</p></div>
+          <div class="col"><span>Our mitigation</span><p>End-to-end encryption, role-based access control, and consent-first design from day one.</p></div>
+        </div></div>
+      </div>
+    </div>
+    <div class="net-impact">Paper-based, untraceable case-taking → standardized, coded, ABHA-linked records that scale from one OPD to a national Ayush health data layer.</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="brand">Patient Case-Taking Software</span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/env.js"></script>
+<script src="js/config.js"></script>
+
+<script src="js/core/history.js"></script>
+<script src="js/core/redflags.js"></script>
+<script src="js/core/elicitation.js"></script>
+<script src="js/core/consent.js"></script>
+<script src="js/core/fhir.js"></script>
+<script src="js/core/documents.js"></script>
+<script src="js/speech.js"></script>
+
+<script src="js/auth.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/app.js"></script>
+<script src="js/entry-lang-picker.js"></script>
+
+<!-- ============ AI CHATBOT ============ -->
+
+
+<div class="chat-fab" id="chatFab" role="button" tabindex="0" aria-label="Open AI assistant">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+  <span class="fab-dot"></span>
+</div>
+
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-head">
+    <div class="chat-logo">AI</div>
+    <div>
+      <div class="chat-title">Case Assistant</div>
+      <div class="chat-sub"><span class="chat-status" id="chatStatusDot"></span><span id="chatStatusText">Ready</span></div>
+    </div>
+    <div class="chat-head-actions">
+      <button class="chat-icon-btn" id="chatLangBtn" type="button" title="Change chat language" aria-label="Change chat language">EN</button>
+      <button class="chat-icon-btn" id="chatSettingsBtn" type="button" title="AI settings" aria-label="AI settings">⚙</button>
+      <button class="chat-icon-btn" id="chatCloseBtn" type="button" title="Close" aria-label="Close chat">✕</button>
+    </div>
+  </div>
+  <div class="chat-msgs" id="chatMsgs"></div>
+  <div class="chat-typing" id="chatTyping"><span></span><span></span><span></span></div>
+  <div class="chat-chips" id="chatChips"></div>
+  <div class="chat-settings" id="chatSettings">
+    <label>Gemini API key</label>
+    <input type="password" id="chatKeyInput" placeholder="Paste your key (AIza…)" autocomplete="off">
+    <div class="chat-settings-row">
+      <button class="small-btn gold" id="chatKeySave" type="button">Save key</button>
+      <button class="small-btn" id="chatKeyClear" type="button">Remove</button>
+    </div>
+    <label>AI model (optional)</label>
+    <input type="text" id="chatModelInput" placeholder="gemini-3.6-flash" autocomplete="off">
+    <p class="hint">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> — key and model are stored only in this browser and sent to Google Gemini. If a model stops working, the app tries newer fallback models automatically.</p>
+  </div>
+  <div class="chat-input-row">
+    <button class="chat-mic" id="chatMicBtn" type="button" title="Speak your answer" aria-label="Voice input">🎤</button>
+    <textarea id="chatInput" rows="1" placeholder="Ask me anything about the app or Ayurveda…" aria-label="Ask the assistant"></textarea>
+    <button class="chat-send" id="chatSendBtn" type="button" aria-label="Send">➤</button>
+  </div>
+</div>
+
+<script src="js/chat.js"></script>
+<script src="js/doctor-review.js"></script>
+<script src="js/intake-pages.js"></script>
+
+</body>
+</html>
+
