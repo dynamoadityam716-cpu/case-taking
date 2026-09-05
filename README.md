@@ -5,8 +5,8 @@ that connects to a **brand-new Supabase project** — it is deliberately kept
 completely separate from the base project:
 
 - separate folder → separate code copy → separate database
-- `js/config.js` here holds **placeholder** values until you paste the new
-  project's credentials; it can never silently fall back to the base DB
+- `js/config.js` here holds **only the new project's credentials** (pasted in
+  step 3 below); it can never silently fall back to the base DB
 - the base project folder (`sih26047-software/`) is never touched by this copy
 
 ## Setup (do these three steps)
@@ -26,6 +26,30 @@ completely separate from the base project:
    New project → **Project Settings → API** → copy **Project URL** and
    **anon public key** into [`js/config.js`](js/config.js) (the two
    `YOUR_NEW_PROJECT_...` lines).
+
+## Source code & pushing changes
+
+This copy lives in its own git repository, deliberately separate from the base
+project's repo:
+
+- **repo:** https://github.com/dynamoadityam716-cpu/case-taking.git
+- the local folder is already initialised on `main` and tracks
+  `origin/main` — `git status` should show a clean working tree
+
+Whenever you change the app and want it on GitHub:
+
+```bash
+cd C:\Users\dynam\OneDrive\ドキュメント\sih26047-software-newdb
+git add -A
+git commit -m "Describe the change"
+git push
+```
+
+Notes:
+
+- `.freebuff/` (Freebuff workspace metadata) is git-ignored and never pushed.
+- `js/config.js` may contain the Supabase **anon public key** — that is safe to
+  commit. Never put the **service_role** key (or any other secret) in the repo.
 
 ## Run it
 
